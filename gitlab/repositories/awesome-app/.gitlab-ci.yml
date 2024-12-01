@@ -12,14 +12,15 @@ test-job:
   script:
     - python3 -m venv --clear tmp
     - source tmp/bin/activate
-    - pip3 install -r requirements.txt
+    - pip3 install -r requirements.txt -i http://pypi.douban.com/simple --trusted-host pypi.douban.com
     - pytest -rA test_hello.py
     - deactivate
 
 release-job:
   stage: release
   script:
-    - apk add docker-cli
+    - sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
+    - apk add docker-cli --no-cache
     - docker build -t $CI_REGISTRY/wonderland/awesome-app/awesome-app:latest --network=host .
     - docker login -u gryphon -p $TOKEN $CI_REGISTRY
     - docker push $CI_REGISTRY/wonderland/awesome-app/awesome-app:latest
