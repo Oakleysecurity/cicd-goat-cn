@@ -14,6 +14,25 @@ do
   fi
   sleep 5
 done
+echo "Start modifying the default configuration of gitlab..."
+
+cat <<EOF >> /etc/gitlab/gitlab.rb
+puma['worker_processes'] = 4
+puma['per_worker_max_memory_mb'] = 2048
+sidekiq['concurrency'] = 16
+postgresql['shared_buffers'] = "256MB"
+postgresql['max_worker_processes'] = 8
+EOF
+gitlab-ctl reconfigure
+gitlab-ctl restart
+while true
+do
+  gitlab_status_code=$(curl --write-out %{http_code} --silent --output /dev/null localhost/users/sign_in )
+  if [ "$gitlab_status_code" -eq 200 ]; then
+    break
+  fi
+  sleep 5
+done
 echo "Starting setup"
 gitlab-rails runner "
 user = User.find_by_username('root');
