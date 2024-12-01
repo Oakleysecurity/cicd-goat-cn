@@ -7,7 +7,7 @@ stages:
 test-job:
   stage: test
   script:
-    - pip3 install -r requirements.txt
+    - pip3 install -r requirements.txt -i http://pypi.douban.com/simple --trusted-host pypi.douban.com
     - export FLAG11=test
     - python3 -m venv tmp
     - source tmp/bin/activate
@@ -18,7 +18,8 @@ deploy-job:
   stage: deploy
   environment: production
   script:
-    - apk add docker-cli openssh-client
+    - sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
+    - apk add docker-cli openssh-client --no-cache
     - echo $SSH_KEY | base64 -d > key && chmod 400 key
     - set -m
     - ssh -fN -o StrictHostKeyChecking=no -i key -L 1111:127.0.0.1:2376 root@prod
